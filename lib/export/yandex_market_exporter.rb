@@ -77,6 +77,16 @@ module Export
     def path_to_url(path)
       "http://#{@host.sub(%r[^http://],'')}/#{path.sub(%r[^/],'')}"
     end
+
+    def sales_notes(product)
+      if product.respond_to?(:yandex_market_sales_notes)
+        notes = product.yandex_market_sales_notes
+        yield notes unless notes.blank?
+      elsif !@config.preferred_sales_notes.blank?
+        yield @config.preferred_sales_notes
+      end
+    end
+
     
     def offer(xml,product, cat)
       
@@ -118,7 +128,7 @@ module Export
         xml.vendorCode             product_properties[@config.preferred_vendor_code] if product_properties[@config.preferred_vendor_code]
         xml.model                  product_properties[@config.preferred_model] if product_properties[@config.preferred_model]
         xml.description            product.description if product.description
-        xml.sales_notes            @config.preferred_sales_notes unless @config.preferred_sales_notes.blank?
+        sales_notes(product) { |notes| xml.sales_notes notes }
         xml.manufacturer_warranty  !product_properties[@config.preferred_manufacturer_warranty].blank? 
         xml.country_of_origin      product_properties[@config.preferred_country_of_manufacturer] if product_properties[@config.preferred_country_of_manufacturer]
         xml.downloadable           false
@@ -137,7 +147,7 @@ module Export
         xml.name                product.name
         xml.vendorCode          product_properties[@config.preferred_vendor_code]
         xml.description         product.description
-        xml.sales_notes         @config.preferred_sales_notes unless @config.preferred_sales_notes.blank?
+        sales_notes(product) { |notes| xml.sales_notes notes }
         xml.country_of_origin   product_properties[@config.preferred_country_of_manufacturer] if product_properties[@config.preferred_country_of_manufacturer]
         xml.downloadable false   
       }
@@ -168,7 +178,7 @@ module Export
         xml.page_extent product_properties[@config.preferred_page_extent]
         
         xml.description product.description
-        xml.sales_notes @config.preferred_sales_notes unless @config.preferred_sales_notes.blank?
+        sales_notes(product) { |notes| xml.sales_notes notes }
         xml.downloadable false
       }
     end
@@ -264,7 +274,7 @@ module Export
         xml.included ""
         xml.transport ""
         xml.description product.description
-        xml.sales_notes @config.sales_notes unless @config.preferred_sales_notes.blank?
+        sales_notes(product) { |notes| xml.sales_notes notes }
       }
     end
     
@@ -284,7 +294,7 @@ module Export
         xml.is_premiere !product_properties[@config.preferred_is_premiere].blank? 
         xml.is_kids !product_properties[@config.preferred_is_kids].blank? 
         xml.description product.description
-        xml.sales_notes @config.preferred_sales_notes unless @config.preferred_sales_notes.blank?
+        sales_notes(product) { |notes| xml.sales_notes notes }
       }
     end
     
